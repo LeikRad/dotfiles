@@ -18,5 +18,5 @@ in {
         shellAliases = aliases // config.shellAliases;
         enable = true;
         generateCompletions = true;
-    }
+    };
 }
