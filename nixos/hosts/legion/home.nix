@@ -14,6 +14,7 @@
     ../../modules/home-manager/figma/figma.nix
     ../../modules/home-manager/ghostty/ghostty.nix
     ../../modules/home-manager/obsidian/obsidian.nix
+    ../../modules/home-manager/sh/sh.nix
   ];
 
   home.username = "leikrad";
