@@ -5,7 +5,7 @@
     ...
 }: let
     aliases = {
-        "nix-rebuild" = "sudo nixos-rebuild switch --flake $HOME/dotfiles/nixos/#$HOSTNAME"
+        "nix-rebuild" = "sudo nixos-rebuild switch --flake $HOME/dotfiles/nixos/#$HOSTNAME";
     };
 in {
     options.shellAliases = with lib;
