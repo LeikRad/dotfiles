@@ -113,7 +113,7 @@
   };
 
   programs.fish.enable = true;
-  progarms.command-not-found.enable = false;
+  programs.command-not-found.enable = false;
 
   programs.bash = {
     interactiveShellInit = ''
