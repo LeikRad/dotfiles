@@ -54,6 +54,8 @@
     LC_TIME = "pt_PT.UTF-8";
   };
 
+  virtualisation.docker.enable = true;
+
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
@@ -102,6 +104,7 @@
     description = "LeikRad";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
+      jdk
     #  thunderbird
     ];
   };
