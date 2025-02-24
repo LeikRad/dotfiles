@@ -14,6 +14,7 @@
     ../../modules/home-manager/figma/figma.nix
     ../../modules/home-manager/ghostty/ghostty.nix
     ../../modules/home-manager/obsidian/obsidian.nix
+    ../../modules/home-manager/sh/sh.nix
   ];
 
   home.username = "leikrad";
@@ -49,6 +50,11 @@
     # '')
   ];
 
+  programs.nix-index = {
+    enable = true;
+    enableFishIntegration = true;
+  };
+  
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
