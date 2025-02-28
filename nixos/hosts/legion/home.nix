@@ -15,6 +15,7 @@
     ../../modules/home-manager/ghostty/ghostty.nix
     ../../modules/home-manager/obsidian/obsidian.nix
     ../../modules/home-manager/sh/sh.nix
+    ../../modules/home-manager/zed/zed.nix
   ];
 
   home.username = "leikrad";
