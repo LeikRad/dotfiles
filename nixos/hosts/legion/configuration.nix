@@ -106,6 +106,8 @@
     packages = with pkgs; [
       jdk
     #  thunderbird
+      dnsutils
+      gnumake
     ];
   };
   home-manager = {
