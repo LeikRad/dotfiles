@@ -8,9 +8,11 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ../../system/gnome.nix
       inputs.home-manager.nixosModules.default
     ];
 
+  gnome.enable = enable;
   # Bootloader.
   boot.loader = {
     efi = {
@@ -59,17 +61,8 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-  # Enable the GNOME Desktop Environment.
-  services.xserver = {
-    displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
-    excludePackages = [
-      pkgs.xterm
-    ];
-  };
-
   services.tailscale.enable = true;
-  
+
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
@@ -129,7 +122,7 @@
       fi
     '';
   };
-  
+
   # Install firefox.
   programs.firefox.enable = true;
 
