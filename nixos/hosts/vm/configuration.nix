@@ -16,7 +16,7 @@
   boot.loader.grub.device = "/dev/sda";
   boot.loader.grub.useOSProber = true;
 
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "vm"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # Configure network proxy if necessary
@@ -44,13 +44,19 @@
     LC_TIME = "pt_PT.UTF-8";
   };
 
+  virtualisation.docker.enable = true;
+
   # Enable the X11 windowing system.
-  # You can disable this if you're only using the Wayland session.
   services.xserver.enable = true;
 
-  # Enable the KDE Plasma Desktop Environment.
-  services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
+  # Enable the GNOME Desktop Environment.
+  services.xserver = {
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
+    excludePackages = [
+      pkgs.xterm
+    ];
+  };
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -58,11 +64,12 @@
     variant = "";
   };
 
+
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -86,7 +93,7 @@
     description = "leikrad";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
-      kdePackages.kate
+      jdk
     #  thunderbird
     ];
   };
@@ -111,9 +118,7 @@
   #  wget
   ];
   virtualisation.virtualbox.guest.enable = true;
-
   virtualisation.virtualbox.guest.dragAndDrop = true;
-
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;

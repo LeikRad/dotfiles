@@ -6,6 +6,13 @@
   imports = [
     ../../modules/home-manager/vscode/vscode.nix
     ../../modules/home-manager/git/git.nix
+    ../../modules/home-manager/discord/discord.nix
+    ../../modules/home-manager/moonlight/moonlight.nix
+    ../../modules/home-manager/spotify/spotify.nix
+    ../../modules/home-manager/figma/figma.nix
+    ../../modules/home-manager/ghostty/ghostty.nix
+    ../../modules/home-manager/obsidian/obsidian.nix
+    ../../modules/home-manager/sh/sh.nix
   ];
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
