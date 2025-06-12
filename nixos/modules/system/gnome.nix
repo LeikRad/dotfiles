@@ -5,7 +5,7 @@ config,
 ...
 }: {
   options.gnome = {
-    enable = lib.mkEnableOption "gnome";
+    enable = lib.mkEnableOption "Gnome";
   };
 
   config = lib.mkIf config.gnome.enable {
@@ -13,11 +13,6 @@ config,
       systemPackages = with pkgs; [ ];
 
       gnome.excludePackages = with pkgs; [
-        gnome-console
-        gnome-photos
-        gnome-tour
-        gnome-connections
-        epiphany
         xterm
       ];
     };

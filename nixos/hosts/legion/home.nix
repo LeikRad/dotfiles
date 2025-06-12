@@ -6,7 +6,7 @@
   nixpkgs.config.allowUnfree = true;
 
   imports = [
-    ../../modules/home-manager/vscode/vscode.nix
+    # ../../modules/home-manager/vscode/vscode.nix
     ../../modules/home-manager/git/git.nix
     ../../modules/home-manager/discord/discord.nix
     ../../modules/home-manager/moonlight/moonlight.nix

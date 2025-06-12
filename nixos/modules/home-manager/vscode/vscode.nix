@@ -1,9 +1,9 @@
-{
-  config,
-  pkgs,
-  ...
-}: {
-  programs.vscode = {
-    enable = true;
-  };
-}
+# {
+#   config,
+#   pkgs,
+#   ...
+# }: {
+#   programs.vscode = {
+#     enable = true;
+#   };
+# }
