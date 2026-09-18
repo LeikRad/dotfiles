@@ -13,6 +13,8 @@
     ../../modules/home-manager/ghostty/ghostty.nix
     ../../modules/home-manager/obsidian/obsidian.nix
     ../../modules/home-manager/sh/sh.nix
+    ../../modules/home-manager/cursor/cursor.nix
+    ../../modules/home-manager/direnv/direnv.nix
   ];
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
