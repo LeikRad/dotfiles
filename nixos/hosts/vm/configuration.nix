@@ -50,13 +50,11 @@
   services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  services.xserver = {
-    displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
-    excludePackages = [
-      pkgs.xterm
-    ];
-  };
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
+  services.xserver.excludePackages = [
+    pkgs.xterm
+  ];
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -91,7 +89,7 @@
   users.users.leikrad = {
     isNormalUser = true;
     description = "leikrad";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" ];
     packages = with pkgs; [
       jdk
     #  thunderbird

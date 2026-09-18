@@ -54,19 +54,25 @@
     LC_TIME = "pt_PT.UTF-8";
   };
 
-  virtualisation.docker.enable = true;
+  virtualisation.docker = {
+    enable = true;
+    # Default bridge subnet (172.17.0.0/16) collides with some real-world
+    # networks (e.g. mobile hotspots), breaking routing when joined. Move it
+    # out of the way.
+    daemon.settings = {
+      bip = "172.30.0.1/16";
+    };
+  };
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  services.xserver = {
-    displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
-    excludePackages = [
-      pkgs.xterm
-    ];
-  };
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
+  services.xserver.excludePackages = [
+    pkgs.xterm
+  ];
 
   services.tailscale.enable = true;
   
@@ -80,7 +86,7 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -102,7 +108,7 @@
   users.users.leikrad = {
     isNormalUser = true;
     description = "LeikRad";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" ];
     packages = with pkgs; [
       jdk
     #  thunderbird
@@ -141,5 +147,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.11"; # Did you read the comment?
-
 }

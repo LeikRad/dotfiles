@@ -7,14 +7,28 @@
 in {
     programs.git = {
         enable = true;
-        userEmail = "bernardo.figueiredo17.102@gmail.com";
-        userName = name;
+        settings.user = {
+            email = "bernardo.figueiredo17.102@gmail.com";
+            name = name;
+        };
     };
     programs.ssh = {
         enable = true;
-        addKeysToAgent = "yes";
+        enableDefaultConfig = false;
+        settings."*" = {
+            ForwardAgent = false;
+            AddKeysToAgent = "yes";
+            Compression = false;
+            ServerAliveInterval = 0;
+            ServerAliveCountMax = 3;
+            HashKnownHosts = false;
+            UserKnownHostsFile = "~/.ssh/known_hosts";
+            ControlMaster = "no";
+            ControlPath = "~/.ssh/master-%r@%n:%p";
+            ControlPersist = "no";
+        };
     };
     services.ssh-agent = {
-        enable = lib.modules.mkIf pkgs.stdenv.isLinux true;
+        enable = lib.modules.mkIf pkgs.stdenv.hostPlatform.isLinux true;
     };
 }
