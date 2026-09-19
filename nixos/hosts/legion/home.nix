@@ -7,6 +7,7 @@
 
   imports = [
     ../../modules/home-manager/vscode/vscode.nix
+    ../../modules/home-manager/zed/zed.nix
     ../../modules/home-manager/git/git.nix
     ../../modules/home-manager/discord/discord.nix
     ../../modules/home-manager/moonlight/moonlight.nix
@@ -35,6 +36,7 @@
   # environment.
   home.packages = [
     pkgs.claude-code
+    pkgs.vagrant
   ];
 
   programs.nix-index = {

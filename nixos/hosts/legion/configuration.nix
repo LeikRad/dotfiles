@@ -64,6 +64,11 @@
     };
   };
 
+  virtualisation.virtualbox.host = {
+    enable = true;
+    enableExtensionPack = true;
+  };
+
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
@@ -73,6 +78,33 @@
   services.xserver.excludePackages = [
     pkgs.xterm
   ];
+
+  # Hybrid graphics: AMD iGPU drives the display by default (low power).
+  # The NVIDIA dGPU stays runtime-suspended until something is explicitly
+  # offloaded to it (GNOME's "Launch using Discrete Graphics GPU", a game
+  # launcher's GPU toggle, or `nvidia-offload <cmd>`), then it powers back
+  # down once that process exits.
+  services.switcherooControl.enable = true;
+
+  hardware.graphics.enable = true;
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+
+    powerManagement.enable = true;
+    powerManagement.finegrained = true;
+
+    prime = {
+      offload = {
+        enable = true;
+        enableOffloadCmd = true;
+      };
+      amdgpuBusId = "PCI:5:0:0";
+      nvidiaBusId = "PCI:1:0:0";
+    };
+  };
 
   services.tailscale.enable = true;
   
@@ -84,6 +116,10 @@
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+
+  environment.systemPackages = [
+    pkgs.powertop
+  ];
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
@@ -108,7 +144,7 @@
   users.users.leikrad = {
     isNormalUser = true;
     description = "LeikRad";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "vboxusers" ];
     packages = with pkgs; [
       jdk
     #  thunderbird
