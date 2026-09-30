@@ -5,6 +5,7 @@
     [ ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
       inputs.nixos-hardware.nixosModules.framework-amd-ai-300-series
+      inputs.lanzaboote.nixosModules.lanzaboote
     ];
 
   # Btrfs mount options (merged with hardware-configuration.nix)
@@ -18,13 +19,21 @@
   fileSystems."/boot".options = lib.mkForce [ "fmask=0077" "dmask=0077" ];
   fileSystems."/efi".options = lib.mkForce [ "fmask=0077" "dmask=0077" ];
 
-  # Boot: systemd-boot on Windows' ESP, kernels on XBOOTLDR
-  boot.loader.systemd-boot.enable = true;
+  # Boot: systemd-boot's loader lives on Windows' shared ESP, kernels on
+  # XBOOTLDR. Lanzaboote (Secure Boot) replaces systemd-boot's own activation
+  # but still reads xbootldrMountPoint/efiSysMountPoint below for where to
+  # place its signed stubs and boot entries.
+  boot.loader.systemd-boot.enable = lib.mkForce false;
   boot.loader.systemd-boot.configurationLimit = 10;
   boot.loader.systemd-boot.xbootldrMountPoint = "/boot";
   boot.loader.efi.efiSysMountPoint = "/efi";
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  boot.lanzaboote = {
+    enable = true;
+    pkiBundle = "/var/lib/sbctl";
+  };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -123,7 +132,7 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  environment.systemPackages = with pkgs; [ git vim wget ];
+  environment.systemPackages = with pkgs; [ git vim wget sbctl ];
 
   system.stateVersion = "26.05";
 }

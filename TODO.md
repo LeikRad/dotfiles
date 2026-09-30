@@ -58,8 +58,50 @@ Revisit when:
   `systemd.tmpfiles.rules = [ "w /sys/power/pm_async - - - - 0" ];` (there is
   no kernel cmdline flag for this one).
 
-## Lanzaboote (Secure Boot) — both systems
+## Lanzaboote (Secure Boot)
 
-Get Secure Boot back on for both `legion` and `framework` via Lanzaboote.
-Needs the flake-based setup either way (already true now that both hosts live
-in this repo) — not started yet.
+**`framework`: done, 2026-09-30.** Secure Boot is enrolled and enforced
+(`sbctl status` shows `Setup Mode: Disabled`, `Secure Boot: Enabled`), both
+NixOS and Windows confirmed booting cleanly under enforcement. Bootloader
+decision made along the way: standardized on `systemd-boot` (required for
+Lanzaboote; also NixOS's modern default and handles Windows dual-boot natively
+via boot-entry auto-discovery, no `os-prober` needed) over GRUB's themed
+graphical menu, which is mutually exclusive with Secure Boot. Plymouth (the
+animated boot *splash*, independent of bootloader choice) deliberately
+deferred — not started.
+
+Implementation notes:
+- `framework` has a split-ESP layout (200M Windows-shared ESP at `/efi`, 2G
+  `XBOOTLDR` at `/boot`) that mainline Lanzaboote doesn't support yet. Using
+  `github:sarunint/lanzaboote/xbootldr` (PR
+  [nix-community/lanzaboote#456](https://github.com/nix-community/lanzaboote/pull/456),
+  unmerged as of 2026-09-30) as the flake input instead of upstream — switch
+  back to upstream once that PR lands in a release. It auto-detects
+  `boot.loader.systemd-boot.xbootldrMountPoint`, no extra config needed beyond
+  keeping that option set.
+- Keys enrolled with `sbctl enroll-keys --microsoft --firmware-builtin` — the
+  `--microsoft` flag is what keeps Windows bootable; `--firmware-builtin`
+  keeps Framework's pre-provisioned OEM keys.
+- BIOS steps (Insyde-based, Framework 13 AMD): F2 (not F12) at boot → Security
+  → Secure Boot → Administer Secure Boot → "Erase All Secure Boot Settings"
+  to enter Setup Mode before enrolling; separately, "Enforce Secure Boot" →
+  Enabled *after* enrolling to actually turn enforcement on (enrolling keys
+  alone doesn't flip that switch). If anything goes wrong, F2 pressed before
+  booting any device always returns to this same menu with a factory-restore
+  option — recoverable, not a brick risk.
+- `sbctl verify` reports every Microsoft boot file as "not signed" — expected,
+  not a problem. It only tracks files signed with *our* key; Microsoft's
+  files keep their own original signature, validated via the enrolled
+  Microsoft cert, a separate trust path. Only our own
+  `EFI/Boot/bootx64.efi` and `EFI/systemd/systemd-bootx64.efi` need to show
+  signed. `EFI/systemd/systemd-boot-fallbackx64.efi` (a leftover self-backup
+  from plain systemd-boot, pre-Lanzaboote) shows unsigned too — harmless,
+  nothing in the boot chain references it.
+
+**`legion`: not started, parked** (explicitly deferred). Blocked on migrating
+off GRUB to `systemd-boot` first — Lanzaboote doesn't support GRUB at all.
+Unlike `framework`, `legion` has a single unified `/boot` partition (no
+XBOOTLDR split), so once migrated it may not need the XBOOTLDR fork at
+all — but that depends on that partition actually being large enough
+(un-verified; would need `lsblk` run on `legion` itself, which this session
+has no direct access to).
