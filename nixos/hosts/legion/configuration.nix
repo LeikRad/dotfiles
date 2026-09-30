@@ -9,9 +9,6 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
-      inputs.umbriel.nixosModules.default
-      inputs.noctalia-greeter.nixosModules.default
-      inputs.noctalia.nixosModules.default
     ];
 
   # Bootloader.
@@ -85,34 +82,15 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-  # Enable the GNOME Desktop Environment. GDM is replaced below by
-  # noctalia-greeter, but GNOME itself stays enabled as the known-good
-  # fallback session while the other compositors are being benchmarked.
-  services.displayManager.gdm.enable = false;
+  # GNOME stays enabled as the known-good fallback session alongside Hyprland.
+  services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
   services.xserver.excludePackages = [
     pkgs.xterm
   ];
 
-  # Wayland compositors under evaluation for daily use. SwayFX and niri were
-  # dropped after testing (SwayFX config nag, niri's scrolling-only layout
-  # is covered by Umbriel anyway) — down to Hyprland vs Umbriel.
+  # Daily driver, with AGS/Astal for the shell widgets.
   programs.hyprland.enable = true;
-  programs.umbriel.enable = true;
-
-  # Noctalia shell (v5, native C++ — not the older Quickshell-based one),
-  # designed together with Umbriel and also supports Hyprland natively.
-  programs.noctalia = {
-    enable = true;
-    # NetworkManager/Bluetooth/UPower/power-profiles-daemon, which Noctalia's
-    # widgets (network, bluetooth, battery) expect to talk to.
-    recommendedServices.enable = true;
-  };
-
-  # noctalia-greeter (greetd-based) replaces GDM above. It lists every
-  # installed session — GNOME included — so login still falls back cleanly
-  # if a compositor under test doesn't come up.
-  services.displayManager.noctalia-greeter.enable = true;
 
   # Hybrid graphics: AMD iGPU drives the display by default (low power).
   # The NVIDIA dGPU stays runtime-suspended until something is explicitly
@@ -149,7 +127,7 @@
 
   # Remote desktop for controlling this machine from Windows (Moonlight
   # client) over the local network. capSysAdmin is required for DRM/KMS
-  # screen capture under Hyprland/Umbriel (wlroots-based Wayland).
+  # screen capture under Hyprland (wlroots-based Wayland).
   services.sunshine = {
     enable = true;
     autoStart = true;
@@ -217,6 +195,7 @@
     isNormalUser = true;
     description = "LeikRad";
     extraGroups = [ "networkmanager" "wheel" "docker" "vboxusers" ];
+    shell = pkgs.zsh;
     packages = with pkgs; [
       jdk
       jdk25
@@ -230,18 +209,8 @@
     };
   };
 
-  programs.fish.enable = true;
+  programs.zsh.enable = true;
   programs.command-not-found.enable = false;
-
-  programs.bash = {
-    interactiveShellInit = ''
-      if [[ $(${pkgs.procps}/bin/ps --no-header --pid=$PPID --format=comm) != "fish" && -z ''${BASH_EXECUTION_STRING} ]]
-      then
-        shopt -q login_shell && LOGIN_OPTION='--login' || LOGIN_OPTION=""
-        exec ${pkgs.fish}/bin/fish $LOGIN_OPTION
-      fi
-    '';
-  };
 
   # Install firefox.
   programs.firefox.enable = true;

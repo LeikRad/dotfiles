@@ -9,25 +9,7 @@
        	inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    umbriel = {
-      url = "github:noctalia-dev/umbriel";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    noctalia-greeter = {
-      url = "github:noctalia-dev/noctalia-greeter";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    noctalia = {
-      url = "github:noctalia-dev/noctalia";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    fabric = {
-      url = "github:Fabric-Development/fabric";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixos-hardware.url = "github:nixos/nixos-hardware/master";
   };
 
   outputs = { self, nixpkgs, ... }@inputs:
@@ -44,6 +26,12 @@
 	modules = [
 	  ./hosts/legion/configuration.nix
 	];
+      };
+      framework = nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/framework/configuration.nix
+        ];
       };
     };
   };

@@ -90,6 +90,7 @@
     isNormalUser = true;
     description = "leikrad";
     extraGroups = [ "networkmanager" "wheel" "docker" ];
+    shell = pkgs.zsh;
     packages = with pkgs; [
       jdk
     #  thunderbird

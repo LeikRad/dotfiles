@@ -14,9 +14,9 @@ in {
         default = {};
     };
 
-    config.programs.fish = {
+    config.programs.zsh = {
         shellAliases = aliases // config.shellAliases;
         enable = true;
-        generateCompletions = true;
+        enableCompletion = true;
     };
 }
