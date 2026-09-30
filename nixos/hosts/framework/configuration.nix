@@ -28,11 +28,26 @@
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  # Swap and hibernation
+  # Swap. Hibernation is disabled below (see systemd.sleep.settings) after
+  # hitting unresolved AMD platform-firmware instability on S4 resume/entry
+  # (Framework 13 Ryzen AI 300 / Krackan) — the swapfile stays as plain swap
+  # headroom regardless.
   swapDevices = [ { device = "/swap/swapfile"; } ];
-  boot.resumeDevice = "/dev/disk/by-label/nixos";
-  boot.kernelParams = [ "resume_offset=533760" ];
   zramSwap.enable = true;
+
+  # Hibernate is unreliable on this hardware right now (AMD AGESA/PMFW sync
+  # flood on resume, and a separate unresolved abort during S4 entry itself)
+  # — refuse it outright rather than risk it half-triggering.
+  systemd.sleep.settings.Sleep = {
+    AllowHibernation = false;
+    AllowSuspendThenHibernate = false;
+    AllowHybridSleep = false;
+  };
+
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend";
+    HandleLidSwitchExternalPower = "suspend";
+  };
 
   # Maintenance and firmware
   services.btrfs.autoScrub.enable = true;
