@@ -9,6 +9,9 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
+      inputs.umbriel.nixosModules.default
+      inputs.noctalia-greeter.nixosModules.default
+      inputs.noctalia.nixosModules.default
     ];
 
   # Bootloader.
@@ -23,6 +26,16 @@
       efiSupport = true;
       device = "nodev";
     };
+  };
+
+  # Compressed RAM-backed swap. There is no disk swap device (see
+  # hardware-configuration.nix), which left systemd-oomd unable to detect
+  # memory pressure ("No swap; memory pressure usage will be degraded") and
+  # long gaming sessions (Minecraft, etc.) ending in hard freezes once RAM
+  # filled up with nowhere for the kernel to reclaim pages to.
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50;
   };
 
   networking.hostName = "legion"; # Define your hostname.
@@ -72,12 +85,34 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-  # Enable the GNOME Desktop Environment.
-  services.displayManager.gdm.enable = true;
+  # Enable the GNOME Desktop Environment. GDM is replaced below by
+  # noctalia-greeter, but GNOME itself stays enabled as the known-good
+  # fallback session while the other compositors are being benchmarked.
+  services.displayManager.gdm.enable = false;
   services.desktopManager.gnome.enable = true;
   services.xserver.excludePackages = [
     pkgs.xterm
   ];
+
+  # Wayland compositors under evaluation for daily use. SwayFX and niri were
+  # dropped after testing (SwayFX config nag, niri's scrolling-only layout
+  # is covered by Umbriel anyway) — down to Hyprland vs Umbriel.
+  programs.hyprland.enable = true;
+  programs.umbriel.enable = true;
+
+  # Noctalia shell (v5, native C++ — not the older Quickshell-based one),
+  # designed together with Umbriel and also supports Hyprland natively.
+  programs.noctalia = {
+    enable = true;
+    # NetworkManager/Bluetooth/UPower/power-profiles-daemon, which Noctalia's
+    # widgets (network, bluetooth, battery) expect to talk to.
+    recommendedServices.enable = true;
+  };
+
+  # noctalia-greeter (greetd-based) replaces GDM above. It lists every
+  # installed session — GNOME included — so login still falls back cleanly
+  # if a compositor under test doesn't come up.
+  services.displayManager.noctalia-greeter.enable = true;
 
   # Hybrid graphics: AMD iGPU drives the display by default (low power).
   # The NVIDIA dGPU stays runtime-suspended until something is explicitly
@@ -86,7 +121,10 @@
   # down once that process exits.
   services.switcherooControl.enable = true;
 
-  hardware.graphics.enable = true;
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true; # needed for Steam and other 32-bit games/libs
+  };
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
     modesetting.enable = true;
@@ -107,7 +145,18 @@
   };
 
   services.tailscale.enable = true;
-  
+  services.netbird.enable = true;
+
+  # Remote desktop for controlling this machine from Windows (Moonlight
+  # client) over the local network. capSysAdmin is required for DRM/KMS
+  # screen capture under Hyprland/Umbriel (wlroots-based Wayland).
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
+
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
@@ -117,8 +166,31 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
+  # Lets prebuilt/generic-Linux dynamically-linked binaries run unmodified
+  # (e.g. Zed's claude-acp npm package bundles its own `claude` binary that
+  # isn't patched for NixOS and fails with "cannot run dynamically linked
+  # executables" without this).
+  programs.nix-ld.enable = true;
+
   environment.systemPackages = [
+    pkgs.brightnessctl
     pkgs.powertop
+    pkgs.openssl
+    pkgs.steam-run # FHS sandbox for native Linux games that ship plain dynamically-linked binaries (e.g. Synergism)
+    (pkgs.writeShellScriptBin "synergism-run" ''
+      # Synergism's Electron build needs NSS/GTK libs that steam-run's
+      # default FHS sandbox doesn't ship, on top of that sandbox itself.
+      # It also crashes under native Wayland/Ozone (EGL context loss), so
+      # it's forced onto XWayland instead.
+      export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [
+        pkgs.nspr
+        pkgs.nss
+        pkgs.at-spi2-core
+        pkgs.gtk3
+        pkgs.libxcomposite
+      ]}:$LD_LIBRARY_PATH"
+      exec ${pkgs.steam-run}/bin/steam-run "$@" --ozone-platform=x11
+    '')
   ];
 
   # Enable sound with pipewire.
@@ -147,6 +219,7 @@
     extraGroups = [ "networkmanager" "wheel" "docker" "vboxusers" ];
     packages = with pkgs; [
       jdk
+      jdk25
     #  thunderbird
     ];
   };
@@ -169,9 +242,15 @@
       fi
     '';
   };
-  
+
   # Install firefox.
   programs.firefox.enable = true;
+
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    localNetworkGameTransfers.openFirewall = true;
+  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
