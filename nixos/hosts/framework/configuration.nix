@@ -152,6 +152,11 @@ logo.sprite.SetOpacity(0);'
 
   services.printing.enable = true;
 
+  # Vagrant (Kali VM) via libvirt/KVM: in-tree kvm_amd module, so unlike
+  # VirtualBox's vboxdrv it loads fine under Secure Boot/lockdown.
+  virtualisation.libvirtd.enable = true;
+  programs.virt-manager.enable = true;
+
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -164,7 +169,7 @@ logo.sprite.SetOpacity(0);'
   users.users.leikrad = {
     isNormalUser = true;
     description = "LeikRad";
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [ "wheel" "networkmanager" "libvirtd" "kvm" ];
     shell = pkgs.zsh;
   };
 

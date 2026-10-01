@@ -37,6 +37,7 @@
 
   home.packages = [
     pkgs.claude-code
+    pkgs.vagrant
   ];
 
   programs.nix-index = {
