@@ -1,0 +1,53 @@
+# Kali Linux VM, provider: VirtualBox.
+#
+# Requires the vagrant-disksize plugin (installed once, not per-project):
+#   vagrant plugin install vagrant-disksize
+#
+# Usage:
+#   vagrant up            # create + boot (first run grows the disk, see note below)
+#   vagrant ssh            # ssh in (or use the GUI window since vb.gui is on)
+#   vagrant halt           # shut down
+#   vagrant destroy        # delete the VM entirely
+#   vagrant snapshot save <name>     # e.g. "post-install", or a CVE id before an exploit
+#   vagrant snapshot restore <name>
+#   vagrant snapshot list
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "kalilinux/rolling"
+
+  # Grows the virtual disk itself to 40GB (dynamically allocated, so it only
+  # takes up real space on the host as data is written). This alone does NOT
+  # grow the partition/filesystem inside the guest -- see the provisioner
+  # below, which does that on first boot.
+  config.disksize.size = "40GB"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "kali-pentest"
+    vb.memory = 8192
+    vb.cpus = 4
+    vb.gui = true
+  end
+
+  # Host-only network so the VM can reach the host/other VMs without being
+  # exposed on the LAN.
+  config.vm.network "private_network", type: "dhcp"
+
+  # Runs once, on first `vagrant up`: installs the full desktop toolset,
+  # then grows the root filesystem to fill the resized disk.
+  config.vm.provision "shell", inline: <<-SHELL
+    set -e
+    apt-get update
+    apt-get install -y kali-linux-headless cloud-guest-utils podman
+
+    root_src=$(findmnt -no SOURCE /)
+    disk=$(lsblk -no pkname "$root_src")
+    part_num=$(echo "$root_src" | grep -o '[0-9]*$')
+
+    if [ -n "$disk" ] && [ -n "$part_num" ]; then
+      growpart "/dev/$disk" "$part_num" || true
+      resize2fs "$root_src" || xfs_growfs / || true
+    else
+      echo "Could not auto-detect disk layout -- grow the filesystem manually."
+    fi
+  SHELL
+end
