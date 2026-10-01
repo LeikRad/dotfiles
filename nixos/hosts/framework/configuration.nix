@@ -6,7 +6,56 @@
       inputs.home-manager.nixosModules.default
       inputs.nixos-hardware.nixosModules.framework-amd-ai-300-series
       inputs.lanzaboote.nixosModules.lanzaboote
+      inputs.catppuccin.nixosModules.catppuccin
     ];
+
+  catppuccin = {
+    enable = true;
+    autoEnable = true;
+    flavor = "mocha";
+  };
+  # Animated boot splash: Framework's own firmware "follow the penguin"
+  # animation, reimplemented as a Plymouth script theme.
+  # https://github.com/ygurin/framework-penguin
+  boot.plymouth = {
+    enable = true;
+    theme = lib.mkForce "framework-penguin";
+    themePackages = [
+      (pkgs.stdenvNoCC.mkDerivation {
+        pname = "framework-penguin-plymouth";
+        version = "unstable-2026-09-30";
+        src = pkgs.fetchFromGitHub {
+          owner = "ygurin";
+          repo = "framework-penguin";
+          rev = "13c0295d65b0ce45116decdc69fadf4679c7d9a7";
+          sha256 = "0hrxnq9yjx9layplqn2s4jd91cq3rgzcdi983p4pfnbj51kx9dqs";
+        };
+        dontBuild = true;
+        installPhase = ''
+          mkdir -p $out/share/plymouth/themes/framework-penguin
+          cp -r $src/* $out/share/plymouth/themes/framework-penguin/
+          # Upstream hardcodes /usr/share/plymouth/themes/framework-penguin,
+          # which doesn't exist on NixOS (no /usr/share, and the script
+          # plugin resolves ScriptFile against its own cwd, not relative to
+          # the .plymouth file, so a bare "." doesn't work either). NixOS's
+          # equivalent stable path, present both pre- and post-switch-root,
+          # is /etc/plymouth/themes/<name>.
+          substituteInPlace $out/share/plymouth/themes/framework-penguin/framework-penguin.plymouth \
+            --replace-fail "/usr/share/plymouth/themes/framework-penguin" "/etc/plymouth/themes/framework-penguin"
+
+          # watermark.png is a leftover Fedora logo from upstream. Hide it
+          # (keeping the sprite itself real, not null, so refresh_callback's
+          # SetX/SetY calls on it don't error) rather than yanking the whole
+          # logo block out and risking a null-reference script error.
+          substituteInPlace $out/share/plymouth/themes/framework-penguin/framework-penguin.script \
+            --replace-fail 'logo.sprite.SetZ(Z_UI);' 'logo.sprite.SetZ(Z_UI);
+logo.sprite.SetOpacity(0);'
+        '';
+      })
+    ];
+  };
+
+  fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
 
   # Btrfs mount options (merged with hardware-configuration.nix)
   fileSystems."/".options = [ "compress=zstd" "noatime" ];
@@ -29,6 +78,11 @@
   boot.loader.efi.efiSysMountPoint = "/efi";
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  # "splash" alone isn't enough for the Plymouth splash to actually own the
+  # screen — without "quiet", systemd still prints its own unit status lines
+  # ("Starting X...") straight to the console over/instead of it.
+  boot.kernelParams = [ "quiet" ];
 
   boot.lanzaboote = {
     enable = true;

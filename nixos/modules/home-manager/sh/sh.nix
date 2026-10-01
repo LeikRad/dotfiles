@@ -18,5 +18,7 @@ in {
         shellAliases = aliases // config.shellAliases;
         enable = true;
         enableCompletion = true;
+        autosuggestion.enable = true;
+        syntaxHighlighting.enable = true;
     };
 }
