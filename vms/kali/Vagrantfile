@@ -1,13 +1,10 @@
-# Kali Linux VM, provider: VirtualBox.
-#
-# Requires the vagrant-disksize plugin (installed once, not per-project):
-#   vagrant plugin install vagrant-disksize
+# Kali Linux VM, provider: libvirt/KVM.
 #
 # Usage:
-#   vagrant up            # create + boot (first run grows the disk, see note below)
-#   vagrant ssh            # ssh in (or use the GUI window since vb.gui is on)
-#   vagrant halt           # shut down
-#   vagrant destroy        # delete the VM entirely
+#   vagrant up              # create + boot (first run grows the disk, see note below)
+#   vagrant ssh              # ssh in (or `virt-manager` for a GUI console)
+#   vagrant halt             # shut down
+#   vagrant destroy          # delete the VM entirely
 #   vagrant snapshot save <name>     # e.g. "post-install", or a CVE id before an exploit
 #   vagrant snapshot restore <name>
 #   vagrant snapshot list
@@ -15,17 +12,31 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "kalilinux/rolling"
 
-  # Grows the virtual disk itself to 40GB (dynamically allocated, so it only
-  # takes up real space on the host as data is written). This alone does NOT
-  # grow the partition/filesystem inside the guest -- see the provisioner
-  # below, which does that on first boot.
-  config.disksize.size = "40GB"
+  config.vm.provider "libvirt" do |lv|
+    lv.default_prefix = "kali-pentest"
+    lv.memory = 12288
+    lv.cpus = 4
 
-  config.vm.provider "virtualbox" do |vb|
-    vb.name = "kali-pentest"
-    vb.memory = 8192
-    vb.cpus = 4
-    vb.gui = true
+    # Grows the virtual disk itself to 80GB (dynamically allocated, so it
+    # only takes up real space on the host as data is written). This alone
+    # does NOT grow the partition/filesystem inside the guest -- see the
+    # provisioner below, which does that on first boot.
+    lv.machine_virtual_size = 80
+
+    # SPICE + virtio-gpu instead of the VNC/cirrus default. virtio-gpu (unlike
+    # the legacy QXL device) has no fixed resolution table, so paired with
+    # spice-vdagent in the guest (installed by the provisioner below) it
+    # resizes to whatever arbitrary size the viewer window is -- the same
+    # experience as VirtualBox's guest additions auto-resize.
+    lv.graphics_type = "spice"
+    lv.video_type = "virtio"
+    lv.video_vram = 65536
+    lv.channel :type => "spicevmc", :target_name => "com.redhat.spice.0", :target_type => "virtio"
+
+    # Default input is a relative PS/2 mouse, which desyncs badly from the
+    # click position on a scaled display. A USB tablet does absolute
+    # positioning instead.
+    lv.input :type => "tablet", :bus => "usb"
   end
 
   # Host-only network so the VM can reach the host/other VMs without being
@@ -37,7 +48,8 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     set -e
     apt-get update
-    apt-get install -y kali-linux-headless cloud-guest-utils podman
+    apt-get install -y kali-linux-headless cloud-guest-utils podman spice-vdagent
+    systemctl enable --now spice-vdagentd
 
     root_src=$(findmnt -no SOURCE /)
     disk=$(lsblk -no pkname "$root_src")

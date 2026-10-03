@@ -145,12 +145,19 @@ logo.sprite.SetOpacity(0);'
   services.desktopManager.gnome.enable = true;
   services.xserver.excludePackages = [ pkgs.xterm ];
 
-  # Daily driver, with AGS/Astal for the shell widgets.
+  # Daily driver, with Astal (Vala) for the shell widgets.
   programs.hyprland.enable = true;
 
   hardware.graphics.enable32Bit = true; # needed for Steam and other 32-bit games/libs
 
   services.printing.enable = true;
+
+  # For reaching the desktop's llama.cpp server (RX 7800 XT) remotely.
+  # tailscaled itself runs always (just the idle daemon); it does NOT
+  # auto-connect to the tailnet on its own. Connection state is separate
+  # and persists independently: `tailscale up` connects, `tailscale down`
+  # disconnects and stays disconnected across reboots until `up` again.
+  services.tailscale.enable = true;
 
   # Vagrant (Kali VM) via libvirt/KVM: in-tree kvm_amd module, so unlike
   # VirtualBox's vboxdrv it loads fine under Secure Boot/lockdown.

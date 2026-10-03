@@ -89,7 +89,7 @@
     pkgs.xterm
   ];
 
-  # Daily driver, with AGS/Astal for the shell widgets.
+  # Daily driver, with Astal (Vala) for the shell widgets.
   programs.hyprland.enable = true;
 
   # Hybrid graphics: AMD iGPU drives the display by default (low power).

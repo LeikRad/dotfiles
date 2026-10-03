@@ -7,6 +7,7 @@
     inputs.catppuccin.homeModules.catppuccin
     ../../modules/home-manager/vscode/vscode.nix
     ../../modules/home-manager/zed/zed.nix
+    ../../modules/home-manager/neovim/neovim.nix
     ../../modules/home-manager/git/git.nix
     ../../modules/home-manager/discord/discord.nix
     ../../modules/home-manager/moonlight/moonlight.nix
@@ -17,11 +18,14 @@
     ../../modules/home-manager/sh/sh.nix
     ../../modules/home-manager/cursor/cursor.nix
     ../../modules/home-manager/direnv/direnv.nix
-    ../../modules/home-manager/ags/ags.nix
+    ../../modules/home-manager/astal/astal.nix
     ../../modules/home-manager/starship/starship.nix
     ../../modules/home-manager/eza/eza.nix
     ../../modules/home-manager/zoxide/zoxide.nix
     ../../modules/home-manager/fzf/fzf.nix
+    ../../modules/home-manager/goose/goose.nix
+    ../../modules/home-manager/obs-studio/obs-studio.nix
+    ../../modules/home-manager/fastfetch/fastfetch.nix
   ];
 
   catppuccin = {

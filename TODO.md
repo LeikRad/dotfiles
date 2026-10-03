@@ -105,3 +105,40 @@ XBOOTLDR split), so once migrated it may not need the XBOOTLDR fork at
 all — but that depends on that partition actually being large enough
 (un-verified; would need `lsblk` run on `legion` itself, which this session
 has no direct access to).
+
+## Astal widgets (Vala) — started 2026-10-03
+
+Switched from AGS (TS/JSX on GJS) to Astal with Vala for lower RAM use.
+`ags.nix` is kept around, so going back to AGS is a one-line import swap in
+both hosts' `home.nix`.
+
+Done:
+- `modules/home-manager/astal/astal.nix`: `astal` CLI (`pkgs.astal.io`) +
+  kitty, imported on both hosts.
+- `~/dotfiles/astal`: meson project with its own flake (dev shell + package)
+  and a starter bar (Hyprland workspaces, clock, battery) on Astal3/GTK3.
+
+Next:
+- First build: `git add .` (flakes only see tracked files), then
+  `nix develop`, `meson setup build && meson compile -C build`,
+  `./build/astal-shell`. Not compiled yet, so expect a few API/type fixes.
+- Decide which widgets to build next (e.g. tray, network, audio via
+  wireplumber, media via mpris, notifications via notifd, launcher). Each one
+  needs its `pkgs.astal.<lib>` in `flake.nix` and its `astal-<lib>-0.1` in
+  `meson.build`.
+- Once it's stable: add the astal flake as an input to the system flake,
+  install its package, and start it from Hyprland with `exec-once`.
+
+## Neovim setup — started 2026-10-03
+
+`modules/home-manager/neovim/neovim.nix` enables `programs.neovim` with
+`vi`/`vim` aliases, imported on both hosts. Catppuccin `autoEnable` should
+theme it automatically (unverified).
+
+Next:
+- Pick an approach: hand-written Lua config vs. a distro (LazyVim etc.) vs.
+  configuring it declaratively through Nix (`programs.neovim.plugins`, or
+  nixvim).
+- LSPs/formatters (installed via Nix, not Mason): at least `nil`/`nixd` for
+  Nix and `vala-language-server` for the Astal project.
+- Decide whether to make it `$EDITOR` (`defaultEditor = true`).
